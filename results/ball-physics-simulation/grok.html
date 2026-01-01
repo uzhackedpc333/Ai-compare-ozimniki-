@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Bouncing Ball Simulation</title>
+    <style>
+        /* Center the content and set basic styles */
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* The simulation container: a boxed area where the ball moves */
+        #container {
+            position: relative;
+            width: 600px;
+            height: 400px;
+            border: 2px solid black;
+            margin: 20px auto;
+            overflow: hidden;
+            /* Prevent ball from showing outside */
+            background-color: #f0f0f0;
+        }
+
+        /* The ball: a simple circle using border-radius */
+        #ball {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background-color: red;
+            border-radius: 50%;
+        }
+
+        /* Styles for controls section */
+        .controls {
+            margin: 20px auto;
+            width: 600px;
+        }
+
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- The simulation area -->
+    <div id="container">
+        <!-- The ball element -->
+        <div id="ball"></div>
+    </div>
+
+    <!-- Controls for adjusting parameters -->
+    <div class="controls">
+        <label>Gravity (px/s²): <span id="grav-value">980</span></label>
+        <input type="range" id="gravity" min="0" max="2000" step="10" value="980">
+
+        <label>Bounce Power (0-1): <span id="bounce-value">0.8</span></label>
+        <input type="range" id="bounce" min="0" max="1" step="0.01" value="0.8">
+
+        <label>Horizontal Speed (px/s): <span id="horiz-value">50</span></label>
+        <input type="range" id="horiz_speed" min="-200" max="200" step="1" value="50">
+
+        <button id="reset">Reset Ball</button>
+    </div>
+
+    <script>
+        // Get DOM elements
+        const container = document.getElementById('container');
+        const ball = document.getElementById('ball');
+        const gravitySlider = document.getElementById('gravity');
+        const bounceSlider = document.getElementById('bounce');
+        const horizSlider = document.getElementById('horiz_speed');
+        const gravValue = document.getElementById('grav-value');
+        const bounceValue = document.getElementById('bounce-value');
+        const horizValue = document.getElementById('horiz-value');
+        const resetButton = document.getElementById('reset');
+
+        // Physics variables
+        let x; // Ball x position (pixels)
+        let y; // Ball y position (pixels)
+        let vx; // Horizontal velocity (pixels/second)
+        let vy = 0; // Vertical velocity (pixels/second)
+        let g; // Gravity acceleration (pixels/second²)
+        let restitution; // Bounce coefficient (0-1, energy retention on bounce)
+        const mu = 0.02; // Friction coefficient for ground sliding (adjusts how quickly horizontal speed decreases on ground)
+        const epsilon = 20; // Threshold velocity for settling on ground (pixels/second)
+        let onGround = false; // Flag to check if ball is resting on the ground
+        let lastTime = 0; // For calculating delta time in animation
+
+        // Get container and ball dimensions (done once, assuming no resize)
+        const width = container.clientWidth;
+        const height = container.clientHeight;
+        const ballSize = ball.offsetWidth; // Ball diameter
+
+        // Function to initialize or reset the simulation
+        function resetSimulation() {
+            // Center the ball horizontally at the top
+            x = (width - ballSize) / 2;
+            y = 0;
+            vx = parseFloat(horizSlider.value); // Set initial horizontal velocity from slider
+            vy = 0;
+            onGround = false;
+            // Update ball position immediately
+            ball.style.left = `${x}px`;
+            ball.style.top = `${y}px`;
+        }
+
+        // Add event listeners for sliders (update variables in real-time)
+        gravitySlider.addEventListener('input', () => {
+            g = parseFloat(gravitySlider.value);
+            gravValue.textContent = g;
+        });
+
+        bounceSlider.addEventListener('input', () => {
+            restitution = parseFloat(bounceSlider.value);
+            bounceValue.textContent = restitution.toFixed(2);
+        });
+
+        horizSlider.addEventListener('input', () => {
+            vx = parseFloat(horizSlider.value); // Update current horizontal velocity
+            horizValue.textContent = vx;
+        });
+
+        // Add event listener for reset button
+        resetButton.addEventListener('click', resetSimulation);
+
+        // Animation loop using requestAnimationFrame
+        function animate(timestamp) {
+            // Calculate delta time (dt) in seconds for realistic physics
+            if (!lastTime) lastTime = timestamp;
+            const dt = (timestamp - lastTime) / 1000;
+            lastTime = timestamp;
+
+            // Apply gravity only if not on ground
+            if (!onGround) {
+                vy += g * dt; // Accelerate downward due to gravity
+            }
+
+            // Update positions based on velocities
+            x += vx * dt;
+            y += vy * dt;
+
+            // Handle collisions with walls and floor
+
+            // Left wall
+            if (x < 0) {
+                x = 0;
+                vx = -vx * restitution; // Bounce with energy loss
+            }
+
+            // Right wall
+            if (x + ballSize > width) {
+                x = width - ballSize;
+                vx = -vx * restitution; // Bounce with energy loss
+            }
+
+            // Top (unlikely, but handled)
+            if (y < 0) {
+                y = 0;
+                vy = -vy * restitution; // Bounce with energy loss
+            }
+
+            // Bottom (floor)
+            if (y + ballSize > height) {
+                y = height - ballSize;
+                const bouncedVy = -vy * restitution; // Calculate post-bounce velocity
+                if (Math.abs(bouncedVy) > epsilon) {
+                    vy = bouncedVy; // Bounce if enough energy
+                    onGround = false;
+                } else {
+                    vy = 0; // Settle on ground if low energy
+                    onGround = true;
+                }
+            }
+
+            // If on ground, apply friction to horizontal velocity
+            if (onGround) {
+                vy = 0; // No vertical movement
+                const dv = mu * g * dt; // Friction deceleration
+                if (vx > 0) {
+                    vx = Math.max(0, vx - dv);
+                } else if (vx < 0) {
+                    vx = Math.min(0, vx + dv);
+                }
+            }
+
+            // Update ball position in DOM
+            ball.style.left = `${x}px`;
+            ball.style.top = `${y}px`;
+
+            // Request next animation frame
+            requestAnimationFrame(animate);
+        }
+
+        // Initialize variables from sliders
+        g = parseFloat(gravitySlider.value);
+        restitution = parseFloat(bounceSlider.value);
+        vx = parseFloat(horizSlider.value);
+
+        // Set initial display values
+        gravValue.textContent = g;
+        bounceValue.textContent = restitution.toFixed(2);
+        horizValue.textContent = vx;
+
+        // Reset and start the simulation on load
+        resetSimulation();
+        requestAnimationFrame(animate);
+    </script>
+</body>
+
+</html>

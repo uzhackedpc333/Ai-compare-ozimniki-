@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Bouncing Ball Physics Simulation</title>
+
+    <!-- ========== INLINE STYLES ========== -->
+    <style>
+        /* Center everything on the page */
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f2f2f2;
+        }
+
+        /* The play area */
+        #container {
+            position: relative;
+            width: 600px;
+            height: 400px;
+            border: 4px solid #333;
+            background: #fff;
+            overflow: hidden;
+            /* keep the ball inside visually */
+        }
+
+        /* The ball */
+        #ball {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: radial-gradient(circle at 30% 30%, #ff7a7a, #d62828);
+            border-radius: 50%;
+            left: 50%;
+            top: 0;
+            /* start at the top */
+            transform: translateX(-50%);
+        }
+
+        /* Control panel */
+        #controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            background: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        label {
+            font-size: 14px;
+        }
+
+        input[type="range"] {
+            width: 120px;
+        }
+
+        button {
+            padding: 6px 12px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- ========== SIMULATION AREA ========== -->
+    <div id="container">
+        <div id="ball"></div>
+    </div>
+
+    <!-- ========== CONTROLS ========== -->
+    <div id="controls">
+        <label>Gravity: <input type="range" id="gravitySlider" min="0.1" max="1" step="0.05" value="0.5"></label>
+        <label>Bounce: <input type="range" id="bounceSlider" min="0.3" max="0.95" step="0.05" value="0.75"></label>
+        <label>Horiz speed: <input type="range" id="horizSlider" min="-5" max="5" step="0.5" value="0"></label>
+        <button id="resetBtn">Reset Ball</button>
+    </div>
+
+    <!-- ========== INLINE JAVASCRIPT ========== -->
+    <script>
+        /* ---------- Grab DOM elements ---------- */
+        const ball = document.getElementById('ball');
+        const container = document.getElementById('container');
+        const resetBtn = document.getElementById('resetBtn');
+
+        const gravitySlider = document.getElementById('gravitySlider');
+        const bounceSlider = document.getElementById('bounceSlider');
+        const horizSlider = document.getElementById('horizSlider');
+
+        /* ---------- Physics variables ---------- */
+        let x, y; // position (px)
+        let vx, vy; // velocity (px per frame)
+        let gravity; // acceleration (px per frame²)
+        let bounce; // energy retained after bounce (0-1)
+        let friction = 0.995; // slight air/roll friction each frame
+
+        let rafId; // requestAnimationFrame id so we can cancel
+
+        /* ---------- Helper: read slider values ---------- */
+        function readSliders() {
+            gravity = parseFloat(gravitySlider.value);
+            bounce = parseFloat(bounceSlider.value);
+            // vx is only set on reset, but we still grab it for display clarity
+        }
+
+        /* ---------- Initialize / Reset simulation ---------- */
+        function resetBall() {
+            // Stop any ongoing animation
+            cancelAnimationFrame(rafId);
+
+            // Read user settings
+            readSliders();
+
+            // Initial conditions
+            x = container.clientWidth / 2 - ball.clientWidth / 2;
+            y = 0;
+            vx = parseFloat(horizSlider.value);
+            vy = 0;
+
+            // Place ball visually
+            ball.style.left = x + 'px';
+            ball.style.top = y + 'px';
+
+            // Start animation loop
+            animate();
+        }
+
+        /* ---------- Animation loop ---------- */
+        function animate() {
+            // 1. Apply gravity (acceleration increases downward velocity)
+            vy += gravity;
+
+            // 2. Apply friction to both axes
+            vx *= friction;
+            vy *= friction;
+
+            // 3. Update position
+            x += vx;
+            y += vy;
+
+            const maxX = container.clientWidth - ball.clientWidth;
+            const maxY = container.clientHeight - ball.clientHeight;
+
+            /* ---- Bounce off floor ---- */
+            if (y >= maxY) {
+                y = maxY; // sit exactly on floor
+                vy *= -bounce; // reverse and dampen
+            }
+
+            /* ---- Bounce off ceiling ---- */
+            if (y <= 0) {
+                y = 0;
+                vy *= -bounce;
+            }
+
+            /* ---- Bounce off left/right walls ---- */
+            if (x <= 0) {
+                x = 0;
+                vx *= -bounce;
+            } else if (x >= maxX) {
+                x = maxX;
+                vx *= -bounce;
+            }
+
+            /* 4. Render */
+            ball.style.left = x + 'px';
+            ball.style.top = y + 'px';
+
+            /* 5. Keep looping */
+            rafId = requestAnimationFrame(animate);
+        }
+
+        /* ---------- Event listeners ---------- */
+        resetBtn.addEventListener('click', resetBall);
+
+        /* Allow live tuning of gravity & bounce (optional nicety) */
+        gravitySlider.addEventListener('input', readSliders);
+        bounceSlider.addEventListener('input', readSliders);
+
+        /* ---------- Kick everything off ---------- */
+        resetBall();
+    </script>
+</body>
+
+</html>

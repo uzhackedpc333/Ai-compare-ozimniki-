@@ -1,0 +1,199 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bouncing Ball Physics Simulation</title>
+    <style>
+        /* Center the simulation container on the page */
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Container for the simulation area */
+        #container {
+            width: 600px;
+            height: 400px;
+            border: 2px solid #333;
+            position: relative;
+            background-color: white;
+            overflow: hidden;
+            /* Prevent ball from going outside */
+        }
+
+        /* The ball: a red circle */
+        #ball {
+            width: 30px;
+            height: 30px;
+            background-color: red;
+            border-radius: 50%;
+            /* Makes it a circle */
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        /* Controls section below the simulation */
+        #controls {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 600px;
+        }
+
+        /* Style for labels */
+        label {
+            font-weight: bold;
+        }
+
+        /* Reset button styling */
+        #resetBtn {
+            padding: 10px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #resetBtn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Simulation area -->
+    <div id="container">
+        <div id="ball"></div>
+    </div>
+
+    <!-- Control panel -->
+    <div id="controls">
+        <label for="gravity">Gravity: <span id="gravityValue">0.5</span></label>
+        <input type="range" id="gravity" min="0.1" max="2" step="0.1" value="0.5" />
+
+        <label for="bounce">Bounce Power: <span id="bounceValue">0.8</span></label>
+        <input type="range" id="bounce" min="0.1" max="1.0" step="0.05" value="0.8" />
+
+        <label for="horizontal">Horizontal Speed: <span id="horizontalValue">0</span></label>
+        <input type="range" id="horizontal" min="-5" max="5" step="0.5" value="0" />
+
+        <button id="resetBtn">Reset Ball</button>
+    </div>
+
+    <script>
+        // Get DOM elements
+        const container = document.getElementById('container');
+        const ball = document.getElementById('ball');
+        const resetBtn = document.getElementById('resetBtn');
+
+        // Sliders and value displays
+        const gravitySlider = document.getElementById('gravity');
+        const bounceSlider = document.getElementById('bounce');
+        const horizontalSlider = document.getElementById('horizontal');
+        const gravityValue = document.getElementById('gravityValue');
+        const bounceValue = document.getElementById('bounceValue');
+        const horizontalValue = document.getElementById('horizontalValue');
+
+        // Physics variables (initialized by reset function)
+        let ballState = {};
+
+        // Reset function: sets initial physics state
+        function resetBall() {
+            // Initial position (top center)
+            ballState.x = container.clientWidth / 2 - 15; // half of ball width (30/2)
+            ballState.y = 0;
+
+            // Initial velocities
+            ballState.vx = parseFloat(horizontalSlider.value); // horizontal velocity
+            ballState.vy = 0; // vertical velocity starts at 0
+
+            // Update ball position immediately
+            updateBallPosition();
+        }
+
+        // Update the ball's visual position based on physics state
+        function updateBallPosition() {
+            ball.style.left = ballState.x + 'px';
+            ball.style.top = ballState.y + 'px';
+        }
+
+        // Main animation loop using requestAnimationFrame
+        function animate() {
+            // Get current slider values for physics
+            const gravity = parseFloat(gravitySlider.value);
+            const bounce = parseFloat(bounceSlider.value);
+            ballState.vx = parseFloat(horizontalSlider.value); // Allow real-time adjustment
+
+            // Apply gravity to vertical velocity
+            ballState.vy += gravity;
+
+            // Update position based on velocity
+            ballState.x += ballState.vx;
+            ballState.y += ballState.vy;
+
+            // Get container dimensions
+            const containerWidth = container.clientWidth;
+            const containerHeight = container.clientHeight;
+            const ballRadius = 15; // half of 30px
+
+            // Handle floor collision (bottom of container)
+            if (ballState.y + ballRadius * 2 > containerHeight) {
+                ballState.y = containerHeight - ballRadius * 2; // Place ball on floor
+                ballState.vy = -ballState.vy * bounce; // Reverse and reduce vertical speed
+
+                // Apply friction to horizontal speed when hitting the ground
+                ballState.vx *= 0.95;
+            }
+
+            // Handle left/right wall collisions
+            if (ballState.x < 0) {
+                ballState.x = 0;
+                ballState.vx = -ballState.vx * bounce; // Bounce with energy loss
+            } else if (ballState.x + ballRadius * 2 > containerWidth) {
+                ballState.x = containerWidth - ballRadius * 2;
+                ballState.vx = -ballState.vx * bounce;
+            }
+
+            // Update visual position
+            updateBallPosition();
+
+            // Continue animation loop
+            requestAnimationFrame(animate);
+        }
+
+        // Event listeners for sliders to update displayed values
+        gravitySlider.addEventListener('input', () => {
+            gravityValue.textContent = gravitySlider.value;
+        });
+
+        bounceSlider.addEventListener('input', () => {
+            bounceValue.textContent = bounceSlider.value;
+        });
+
+        horizontalSlider.addEventListener('input', () => {
+            horizontalValue.textContent = horizontalSlider.value;
+        });
+
+        // Reset button listener
+        resetBtn.addEventListener('click', resetBall);
+
+        // Initialize the simulation
+        resetBall();
+        animate(); // Start the animation loop
+    </script>
+</body>
+
+</html>
+```

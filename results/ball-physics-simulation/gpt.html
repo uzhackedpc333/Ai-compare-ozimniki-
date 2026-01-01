@@ -1,0 +1,224 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Bouncing Ball Physics</title>
+
+    <style>
+        /* ===== PAGE SETUP ===== */
+        body {
+            margin: 0;
+            height: 100vh;
+            background: #0b0f14;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, sans-serif;
+            color: #e0e0e0;
+        }
+
+        /* ===== SIMULATION CONTAINER ===== */
+        .container {
+            border: 2px solid #00ff88;
+            border-radius: 12px;
+            padding: 15px;
+            width: 500px;
+            background: #111827;
+            box-shadow: 0 0 25px rgba(0, 255, 136, 0.3);
+        }
+
+        .title {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #00ff88;
+            letter-spacing: 1px;
+        }
+
+        /* ===== PLAY AREA ===== */
+        .simulation {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        /* ===== BALL ===== */
+        .ball {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: #38bdf8;
+            border-radius: 50%;
+            left: 50%;
+            transform: translateX(-50%);
+            top: 0;
+        }
+
+        /* ===== CONTROLS ===== */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .control {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 14px;
+        }
+
+        input[type="range"] {
+            width: 180px;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 10px;
+            background: transparent;
+            border: 1px solid #00ff88;
+            color: #00ff88;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #00ff88;
+            color: #000;
+            box-shadow: 0 0 15px #00ff88;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="title">Bouncing Ball Physics</div>
+
+        <div class="simulation" id="simulation">
+            <div class="ball" id="ball"></div>
+        </div>
+
+        <div class="controls">
+            <div class="control">
+                <label>Gravity</label>
+                <input type="range" id="gravity" min="0.1" max="2" step="0.1" value="0.6">
+            </div>
+
+            <div class="control">
+                <label>Bounce Power</label>
+                <input type="range" id="bounce" min="0.4" max="0.95" step="0.05" value="0.75">
+            </div>
+
+            <div class="control">
+                <label>Horizontal Speed</label>
+                <input type="range" id="speed" min="-5" max="5" step="0.5" value="2">
+            </div>
+
+            <button id="reset">Reset Ball</button>
+        </div>
+    </div>
+
+    <script>
+        /* =====================================================
+           BASIC PHYSICS VARIABLES
+           ===================================================== */
+
+        const ball = document.getElementById("ball");
+        const sim = document.getElementById("simulation");
+
+        // Ball state
+        let x, y;
+        let velocityY;
+        let velocityX;
+
+        // Physics values (controlled by sliders)
+        let gravity;
+        let bouncePower;
+        let friction = 0.999; // air resistance
+
+        const ballSize = 30;
+        let lastTime = null;
+
+        /* =====================================================
+           RESET / INITIAL STATE
+           ===================================================== */
+        function resetBall() {
+            x = sim.clientWidth / 2 - ballSize / 2;
+            y = 0;
+            velocityY = 0;
+            velocityX = parseFloat(speedSlider.value);
+        }
+
+        /* =====================================================
+           SLIDERS
+           ===================================================== */
+        const gravitySlider = document.getElementById("gravity");
+        const bounceSlider = document.getElementById("bounce");
+        const speedSlider = document.getElementById("speed");
+
+        document.getElementById("reset").addEventListener("click", resetBall);
+
+        /* =====================================================
+           ANIMATION LOOP (requestAnimationFrame)
+           ===================================================== */
+        function animate(timestamp) {
+            if (!lastTime) lastTime = timestamp;
+            const delta = (timestamp - lastTime) / 16.67; // normalize to ~60fps
+            lastTime = timestamp;
+
+            // Read slider values
+            gravity = parseFloat(gravitySlider.value);
+            bouncePower = parseFloat(bounceSlider.value);
+
+            /* ===== APPLY PHYSICS ===== */
+
+            // Gravity affects vertical velocity
+            velocityY += gravity * delta;
+
+            // Apply friction
+            velocityY *= friction;
+            velocityX *= friction;
+
+            // Update position
+            y += velocityY * delta;
+            x += velocityX * delta;
+
+            /* ===== FLOOR COLLISION ===== */
+            const floor = sim.clientHeight - ballSize;
+
+            if (y >= floor) {
+                y = floor;
+                velocityY *= -bouncePower; // reverse direction & lose energy
+            }
+
+            /* ===== WALL COLLISION ===== */
+            if (x <= 0 || x >= sim.clientWidth - ballSize) {
+                velocityX *= -1;
+            }
+
+            /* ===== APPLY TO DOM ===== */
+            ball.style.top = y + "px";
+            ball.style.left = x + "px";
+
+            requestAnimationFrame(animate);
+        }
+
+        /* =====================================================
+           START SIMULATION
+           ===================================================== */
+        resetBall();
+        requestAnimationFrame(animate);
+    </script>
+
+</body>
+
+</html>
+```

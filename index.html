@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Compares | Maqsadbek37</title>
+    <style>
+        /* ========== CSS RESET & BASE ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --neon-green: #00ff88;
+            --neon-purple: #bf00ff;
+            --neon-cyan: #00ffff;
+            --neon-pink: #ff00ff;
+            --bg-dark: #0a0a0f;
+            --bg-card: rgba(15, 15, 25, 0.8);
+            --bg-glass: rgba(20, 20, 35, 0.6);
+            --text-primary: #e0e0e0;
+            --text-secondary: #888;
+            --border-glow: rgba(0, 255, 136, 0.3);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Courier New', 'Monaco', 'Consolas', monospace;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* ========== BACKGROUND EFFECTS ========== */
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(0, 255, 136, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 136, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(0deg,
+                    rgba(0, 0, 0, 0.1) 0px,
+                    rgba(0, 0, 0, 0.1) 1px,
+                    transparent 1px,
+                    transparent 3px);
+            pointer-events: none;
+            z-index: 1;
+            animation: scanline-move 8s linear infinite;
+        }
+
+        @keyframes scanline-move {
+            0% {
+                transform: translateY(0);
+            }
+
+            100% {
+                transform: translateY(10px);
+            }
+        }
+
+        .noise {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.02;
+            pointer-events: none;
+            z-index: 2;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E");
+        }
+
+        /* Matrix rain canvas */
+        #matrix-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.15;
+        }
+
+        /* ========== MAIN CONTAINER ========== */
+        .container {
+            position: relative;
+            z-index: 10;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* ========== HEADER ========== */
+        header {
+            text-align: center;
+            padding: 60px 20px;
+            position: relative;
+            animation: fadeInDown 1s ease-out;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .title {
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            font-weight: bold;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, var(--neon-green), var(--neon-cyan), var(--neon-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 50px rgba(0, 255, 136, 0.5);
+            animation: glow-pulse 3s ease-in-out infinite;
+            position: relative;
+        }
+
+        .title::before {
+            content: '>';
+            position: absolute;
+            left: -60px;
+            color: var(--neon-green);
+            -webkit-text-fill-color: var(--neon-green);
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+
+            0%,
+            50% {
+                opacity: 1;
+            }
+
+            51%,
+            100% {
+                opacity: 0;
+            }
+        }
+
+        @keyframes glow-pulse {
+
+            0%,
+            100% {
+                filter: brightness(1);
+            }
+
+            50% {
+                filter: brightness(1.2);
+            }
+        }
+
+        .subtitle {
+            font-size: clamp(0.9rem, 2vw, 1.2rem);
+            color: var(--text-secondary);
+            margin-top: 20px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+        }
+
+        .portfolio-link {
+            display: inline-block;
+            margin-top: 30px;
+            padding: 12px 30px;
+            background: transparent;
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            text-decoration: none;
+            font-size: 0.9rem;
+            letter-spacing: 0.1em;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .portfolio-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .portfolio-link:hover::before {
+            left: 100%;
+        }
+
+        .portfolio-link:hover {
+            background: rgba(0, 255, 255, 0.1);
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+        }
+
+        /* ========== TASK GRID ========== */
+        .section-title {
+            font-size: 1.5rem;
+            color: var(--neon-green);
+            margin-bottom: 40px;
+            text-align: center;
+            letter-spacing: 0.1em;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 100px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--neon-green), transparent);
+            margin: 15px auto 0;
+        }
+
+        .task-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            padding: 20px 0;
+        }
+
+        /* ========== TASK CARD ========== */
+        .task-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            border-radius: 15px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.6s ease-out backwards;
+        }
+
+        .task-card:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .task-card:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .task-card:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        .task-card:nth-child(4) {
+            animation-delay: 0.4s;
+        }
+
+        .task-card:nth-child(5) {
+            animation-delay: 0.5s;
+        }
+
+        .task-card:nth-child(6) {
+            animation-delay: 0.6s;
+        }
+
+        .task-card:nth-child(7) {
+            animation-delay: 0.7s;
+        }
+
+        .task-card:nth-child(8) {
+            animation-delay: 0.8s;
+        }
+
+        .task-card:nth-child(9) {
+            animation-delay: 0.9s;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .task-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--neon-green), var(--neon-cyan), var(--neon-purple));
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+        }
+
+        .task-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .task-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0, 255, 136, 0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+        }
+
+        .task-card:hover::after {
+            opacity: 1;
+        }
+
+        .task-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            border-color: var(--neon-green);
+            box-shadow:
+                0 20px 40px rgba(0, 0, 0, 0.4),
+                0 0 30px rgba(0, 255, 136, 0.2),
+                inset 0 0 30px rgba(0, 255, 136, 0.05);
+        }
+
+        .task-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .task-name {
+            font-size: 1.3rem;
+            color: var(--neon-cyan);
+            font-weight: bold;
+            letter-spacing: 0.05em;
+        }
+
+        .task-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 255, 255, 0.1);
+            border-radius: 10px;
+            font-size: 1.2rem;
+        }
+
+        /* ========== PROMPT BOX ========== */
+        .prompt-container {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .prompt-header {
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+            background: rgba(0, 255, 136, 0.1);
+            border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+        }
+
+        .prompt-dots {
+            display: flex;
+            gap: 6px;
+            margin-right: 15px;
+        }
+
+        .prompt-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .prompt-dot.red {
+            background: #ff5f56;
+        }
+
+        .prompt-dot.yellow {
+            background: #ffbd2e;
+        }
+
+        .prompt-dot.green {
+            background: #27ca40;
+        }
+
+        .prompt-title {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            letter-spacing: 0.1em;
+        }
+
+        .prompt-body {
+            padding: 15px;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            color: var(--neon-green);
+            user-select: text;
+        }
+
+        .prompt-body::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .prompt-body::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .prompt-body::-webkit-scrollbar-thumb {
+            background: var(--neon-green);
+            border-radius: 3px;
+        }
+
+        .prompt-prefix {
+            color: var(--neon-purple);
+            margin-right: 8px;
+        }
+
+        /* ========== BUTTONS ========== */
+        .card-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: 1px solid;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: rgba(0, 255, 136, 0.1);
+            border-color: var(--neon-green);
+            color: var(--neon-green);
+        }
+
+        .btn-primary:hover {
+            background: var(--neon-green);
+            color: var(--bg-dark);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+        }
+
+        .btn-secondary {
+            background: rgba(0, 255, 255, 0.1);
+            border-color: var(--neon-cyan);
+            color: var(--neon-cyan);
+        }
+
+        .btn-secondary:hover {
+            background: var(--neon-cyan);
+            color: var(--bg-dark);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+
+        /* ========== MODAL ========== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border: 1px solid var(--neon-purple);
+            border-radius: 20px;
+            max-width: 1200px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            animation: modalSlideIn 0.4s ease-out;
+            box-shadow: 0 0 50px rgba(191, 0, 255, 0.3);
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(-30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: 30px;
+            border-bottom: 1px solid rgba(191, 0, 255, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            background: var(--bg-card);
+            z-index: 10;
+        }
+
+        .modal-title {
+            font-size: 1.8rem;
+            color: var(--neon-purple);
+            letter-spacing: 0.1em;
+        }
+
+        .modal-close {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--neon-purple);
+            background: transparent;
+            color: var(--neon-purple);
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: var(--neon-purple);
+            color: var(--bg-dark);
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .modal-prompt {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(191, 0, 255, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .modal-prompt-label {
+            color: var(--neon-purple);
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .modal-prompt-text {
+            color: var(--neon-green);
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        /* ========== AI GRID ========== */
+        .ai-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+        }
+
+        .ai-card {
+            background: var(--bg-glass);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ai-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, transparent 0%, rgba(0, 255, 255, 0.1) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .ai-card:hover::before {
+            opacity: 1;
+        }
+
+        .ai-card:hover {
+            transform: translateY(-8px) scale(1.05);
+            border-color: var(--neon-cyan);
+            box-shadow:
+                0 15px 30px rgba(0, 0, 0, 0.4),
+                0 0 25px rgba(0, 255, 255, 0.3);
+        }
+
+        .ai-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 15px;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .ai-name {
+            font-size: 1.1rem;
+            color: var(--neon-cyan);
+            font-weight: bold;
+            letter-spacing: 0.05em;
+            position: relative;
+            z-index: 1;
+        }
+
+        .ai-status {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--neon-green);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(0.8);
+            }
+        }
+
+        /* ========== FOOTER ========== */
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            margin-top: 60px;
+            border-top: 1px solid rgba(0, 255, 136, 0.2);
+        }
+
+        .footer-text {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .footer-link {
+            color: var(--neon-cyan);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-link:hover {
+            color: var(--neon-green);
+            text-shadow: 0 0 10px currentColor;
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            header {
+                padding: 40px 15px;
+            }
+
+            .title::before {
+                display: none;
+            }
+
+            .task-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .ai-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+
+            .modal-content {
+                border-radius: 15px;
+            }
+
+            .modal-header {
+                padding: 20px;
+            }
+
+            .modal-body {
+                padding: 20px;
+            }
+
+            .ai-card {
+                padding: 20px 15px;
+            }
+
+            .ai-icon {
+                width: 50px;
+                height: 50px;
+                font-size: 1.2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .task-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .ai-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .card-actions {
+                flex-direction: column;
+            }
+        }
+
+        /* ========== SCROLL STYLING ========== */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(var(--neon-green), var(--neon-cyan));
+            border-radius: 4px;
+        }
+
+        /* ========== LOADING ANIMATION ========== */
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .loading.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 3px solid transparent;
+            border-top-color: var(--neon-green);
+            border-right-color: var(--neon-cyan);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ========== GLOW EFFECTS ========== */
+        .glow-green {
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+        }
+
+        .glow-cyan {
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+
+        .glow-purple {
+            box-shadow: 0 0 20px rgba(191, 0, 255, 0.5);
+        }
+
+        /* ========== TYPING EFFECT ========== */
+        .typing-cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1em;
+            background: var(--neon-green);
+            margin-left: 2px;
+            animation: cursor-blink 0.8s infinite;
+        }
+
+        @keyframes cursor-blink {
+
+            0%,
+            50% {
+                opacity: 1;
+            }
+
+            51%,
+            100% {
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Loading Screen -->
+    <div class="loading" id="loading">
+        <div class="loader"></div>
+    </div>
+
+    <!-- Background Effects -->
+    <canvas id="matrix-canvas"></canvas>
+    <div class="bg-grid"></div>
+    <div class="scanlines"></div>
+    <div class="noise"></div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1 class="title">AI Compares</h1>
+            <p class="subtitle">Compare AI models using the same prompt</p>
+            <a href="https://Maqsadbek37.vercel.app" target="_blank" class="portfolio-link">
+                ⬡ View Portfolio
+            </a>
+        </header>
+
+        <!-- Task Grid Section -->
+        <section id="tasks-section">
+            <h2 class="section-title">[ EXPERIMENTS ]</h2>
+            <div class="task-grid" id="task-grid">
+                <!-- Task cards will be generated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer>
+            <p class="footer-text">
+                Built by <a href="https://Maqsadbek37.vercel.app" target="_blank" class="footer-link">Maqsadbek37</a>
+                | © 2024 AI Compares
+            </p>
+        </footer>
+    </div>
+
+    <!-- Modal for AI Comparison -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modal-title">Task Name</h3>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-prompt">
+                    <span class="modal-prompt-label">// PROMPT USED:</span>
+                    <p class="modal-prompt-text" id="modal-prompt-text"></p>
+                </div>
+                <h4 class="section-title">[ SELECT AI MODEL ]</h4>
+                <div class="ai-grid" id="ai-grid">
+                    <!-- AI cards will be generated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== TASK DATA ==========
+        // Edit this array to add/modify tasks
+        const tasks = [
+            {
+                id: 1,
+                name: "Ball physics Simulation",
+                icon: "🐍",
+                prompt: "Create a single-file HTML project (all in one file) that simulates a bouncing ball using pure HTML with inline CSS and inline JavaScript. Requirements: The ball must move with realistic physics: gravity, velocity, acceleration, friction, and bouncing. The ball should fall from the top and bounce when it hits the floor, losing a little energy each time. The animation MUST use requestAnimationFrame(). No external libraries. The ball should be a simple <div> styled as a circle using inline CSS. Everything must be inside ONE HTML file using inline <style> and <script> tags. Add a button “Reset Ball” that restarts the simulation. Add sliders for: Gravity Bounce power Horizontal speed The simulation area should be a centered container with a visible border. Code must be clean, readable, fully commented, and beginner-friendly. Output: Provide only the complete HTML code in one block.",
+                repo: "https://github.com/Maqsadbek37/snake-game"
+            },
+            {
+                id: 2,
+                name: "SnakeGame",
+                icon: "🐍",
+                prompt: "Create a fully functional Snake game using HTML, CSS, and JavaScript. The game should include: a game board with grid, snake movement with arrow keys, food spawning randomly, score tracking, game over detection when hitting walls or self, restart functionality, and smooth animations. Make it visually appealing with a dark theme.",
+                repo: "https://github.com/Maqsadbek37/snake-game"
+            }
+        ];
+
+        // ========== AI MODELS DATA ==========
+        // Edit this array to add/modify AI models
+        const aiModels = [
+            { id: "gpt", name: "GPT", icon: "🤖", file: "gpt.html" },
+            { id: "claude", name: "Claude", icon: "🧠", file: "claude.html" },
+            { id: "gemini", name: "Gemini", icon: "💎", file: "gemini.html" },
+            { id: "Kimi", name: "Kimi", icon: "💎", file: "kimi.html" },
+            { id: "Grok", name: "Grok", icon: "🌪️", file: "grok.html" },
+            { id: "Qwen", name: "Qwen", icon: "✈️", file: "qwen.html" },
+            { id: "Deepseek", name: "Deepseek", icon: "✈️", file: "deepseek.html" },
+        ];
+
+        // Current selected task
+        let currentTask = null;
+
+        // ========== GENERATE TASK CARDS ==========
+        function generateTaskCards() {
+            const grid = document.getElementById('task-grid');
+            grid.innerHTML = tasks.map(task => `
+                <div class="task-card" onclick="openModal(${task.id})">
+                    <div class="task-header">
+                        <span class="task-name">${task.name}</span>
+                        <div class="task-icon">${task.icon}</div>
+                    </div>
+                    <div class="prompt-container">
+                        <div class="prompt-header">
+                            <div class="prompt-dots">
+                                <span class="prompt-dot red"></span>
+                                <span class="prompt-dot yellow"></span>
+                                <span class="prompt-dot green"></span>
+                            </div>
+                            <span class="prompt-title">prompt.txt</span>
+                        </div>
+                        <div class="prompt-body">
+                            <span class="prompt-prefix">$</span>${escapeHtml(task.prompt)}
+                        </div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn btn-primary" onclick="event.stopPropagation(); openModal(${task.id})">
+                            Compare AI →
+                        </button>
+                        <a href="${task.repo}" target="_blank" class="btn btn-secondary" onclick="event.stopPropagation()">
+                            repo →
+                        </a>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ========== GENERATE AI CARDS ==========
+        function generateAICards() {
+            const grid = document.getElementById('ai-grid');
+            grid.innerHTML = aiModels.map(ai => `
+                <div class="ai-card" onclick="openAIResult('${ai.file}')">
+                    <div class="ai-icon">${ai.icon}</div>
+                    <div class="ai-name">${ai.name}</div>
+                    <div class="ai-status">
+                        <span class="status-dot"></span>
+                        Ready
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ========== MODAL FUNCTIONS ==========
+        function openModal(taskId) {
+            currentTask = tasks.find(t => t.id === taskId);
+            if (!currentTask) return;
+
+            document.getElementById('modal-title').textContent = currentTask.name;
+            document.getElementById('modal-prompt-text').textContent = currentTask.prompt;
+
+            const modal = document.getElementById('modal-overlay');
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('modal-overlay');
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+            currentTask = null;
+        }
+
+        // Close modal on overlay click
+        document.getElementById('modal-overlay').addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        // ========== OPEN AI RESULT ==========
+        function openAIResult(filename) {
+            // Construct the URL for the AI result page
+            // You can modify this path based on your folder structure
+            const taskFolder = currentTask ? currentTask.name.toLowerCase().replace(/\s+/g, '-') : 'task';
+            const url = `results/${taskFolder}/${filename}`;
+            window.open(url, '_blank');
+        }
+
+        // ========== UTILITY FUNCTIONS ==========
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ========== MATRIX RAIN EFFECT ==========
+        function initMatrixRain() {
+            const canvas = document.getElementById('matrix-canvas');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const charArray = chars.split('');
+
+            const fontSize = 14;
+            const columns = canvas.width / fontSize;
+
+            const drops = [];
+            for (let i = 0; i < columns; i++) {
+                drops[i] = Math.random() * -100;
+            }
+
+            function draw() {
+                ctx.fillStyle = 'rgba(10, 10, 15, 0.05)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.fillStyle = '#00ff88';
+                ctx.font = fontSize + 'px monospace';
+
+                for (let i = 0; i < drops.length; i++) {
+                    const char = charArray[Math.floor(Math.random() * charArray.length)];
+                    ctx.fillText(char, i * fontSize, drops[i] * fontSize);
+
+                    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                        drops[i] = 0;
+                    }
+                    drops[i]++;
+                }
+            }
+
+            setInterval(draw, 50);
+
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+        }
+
+        // ========== LOADING SCREEN ==========
+        function hideLoading() {
+            setTimeout(() => {
+                document.getElementById('loading').classList.add('hidden');
+            }, 800);
+        }
+
+        // ========== INITIALIZE ==========
+        document.addEventListener('DOMContentLoaded', function () {
+            generateTaskCards();
+            generateAICards();
+            initMatrixRain();
+            hideLoading();
+        });
+    </script>
+</body>
+
+</html>
